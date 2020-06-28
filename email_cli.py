@@ -2,11 +2,11 @@ import os
 import smtplib
 import click
 
-
-
-
 @click.command()
-def email():
+@click.argument('to')
+@click.option('-t','--text', prompt=True)
+@click.option('-s','--subject', default='')
+def email(to, text, subject):
     EMAIL_ADDRESS = os.environ.get('EMAIL_ADDRESS')
     EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 
@@ -17,9 +17,10 @@ def email():
 
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
 
-        subject = 'test ignore'
-        body = 'Lorem ipsum dolor some other shit I don`t remember'
+        body = text
 
         msg = f'Subject: {subject}\n\n{body}'
 
-        smtp.sendmail(EMAIL_ADDRESS, EMAIL_ADDRESS, msg)
+        smtp.sendmail(EMAIL_ADDRESS, to, msg)
+
+        click.echo('Sent email')
