@@ -2,6 +2,8 @@ import os
 import smtplib
 import click
 
+#TODO: add venv
+
 @click.command()
 @click.argument('to')
 @click.option('-t','--text', prompt=True)
@@ -10,10 +12,7 @@ def email(to, text, subject):
     EMAIL_ADDRESS = os.environ.get('EMAIL_ADDRESS')
     EMAIL_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 
-    with smtplib.SMTP('smtp.gmail.com', 587) as smtp:
-        smtp.ehlo()
-        smtp.starttls()
-        smtp.ehlo()
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
 
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
 
