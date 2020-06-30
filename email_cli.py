@@ -4,7 +4,7 @@ import click
 from email.message import EmailMessage
 
 @click.command()
-@click.argument('to')
+@click.argument('to', nargs=-1)
 @click.option('-T', 't', is_flag=True)
 @click.option('-t','--text', required=False)
 @click.option('-F', 'f', is_flag=True)
