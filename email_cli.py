@@ -32,7 +32,6 @@ def send(to, user, t, text, f,  file, subject):
     if user != os.environ.get(address_at):
         EMAIL_PASSWORD = click.prompt('Password')
     else:
-        print(password_at)
         EMAIL_PASSWORD = os.environ.get(password_at)
 
     if t:
