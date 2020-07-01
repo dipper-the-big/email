@@ -1,9 +1,18 @@
 import os
+import configparser
 import smtplib
 import click
 from email.message import EmailMessage
 
-@click.command()
+config = configparser.ConfigParser()
+config.read('email_cli.cfg')
+aliases = config['Aliases']
+
+@click.group()
+def email():
+    pass
+
+@email.command()
 @click.argument('to', nargs=-1)
 @click.option('-u', '--user', default=os.environ.get('EMAIL_ADDRESS'))
 @click.option('-T', 't', is_flag=True)
@@ -11,7 +20,10 @@ from email.message import EmailMessage
 @click.option('-F', 'f', is_flag=True)
 @click.option('-f', '--file', required=False, multiple=True)
 @click.option('-s','--subject', default='')
-def email(to, user, t, text, f,  file, subject):
+def send(to, user, t, text, f,  file, subject):
+    to = resolve(list(to))
+    user = aliases.get(user, user)
+
     if user != os.environ.get('EMAIL_ADDRESS'):
         EMAIL_PASSWORD = click.prompt('Password')
     else:
@@ -46,3 +58,28 @@ def email(to, user, t, text, f,  file, subject):
             click.echo(click.style('Invalid Email Address',fg='red'))
         else:
             click.echo(click.style('Sent email',fg='green'))
+
+
+@email.command()
+@click.argument('alias')
+@click.argument('addr', nargs=-1)
+@click.option('-r', '--remove', is_flag=True)
+def alias(alias, addr, remove):
+    if remove:
+        config.remove_option('Aliases', alias)
+    else:
+        config.set('Aliases', alias, ' '.join(list(addr)))
+    with open('email_cli.cfg', 'w') as f:
+        config.write(f)
+
+
+def resolve(als):
+    res = []
+    for al in als:
+        a = aliases.get(al, al)
+        if a.find(' ') == -1:
+            res.append(a)
+        else:
+            for a_ in resolve(a.split(' ')):
+                res.append(a_)
+    return res
