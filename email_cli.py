@@ -9,7 +9,8 @@ config.read('email_cli.cfg')
 aliases = config['Aliases']
 settings = config['Settings']
 
-server = settings.get('server', 'smtp.gmail.com 465').split(' ')
+server = settings.get('server', 'smtp.gmail.com')
+port = settings.getint('port', 465)
 address_at = settings.get('address_at', 'EMAIL_ADDRESS')
 password_at = settings.get('password_at', 'EMAIL_PASSWORD')
 
@@ -50,7 +51,7 @@ def send(to, user, t, text, f,  file, subject):
             with click.open_file(file,'rb') as file:
                 msg.add_attachment(file.read(), maintype='application', subtype='octet-stream', filename=file.name)
 
-    with smtplib.SMTP_SSL(*server) as smtp:
+    with smtplib.SMTP_SSL(server, port) as smtp:
         try:
             smtp.login(user, EMAIL_PASSWORD)
         except smtplib.SMTPAuthenticationError:
