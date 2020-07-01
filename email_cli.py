@@ -31,7 +31,7 @@ def send(to, user, t, text, f,  file, subject):
     user = aliases.get(user, user)
 
     if user != os.environ.get(address_at):
-        EMAIL_PASSWORD = click.prompt('Password')
+        EMAIL_PASSWORD = click.prompt('Password',hide_input=True)
     else:
         EMAIL_PASSWORD = os.environ.get(password_at)
 
