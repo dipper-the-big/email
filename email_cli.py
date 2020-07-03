@@ -74,10 +74,12 @@ def alias(alias, addr, remove):
     """sets an alias to an address or a list of addresses"""
     if remove:
         config.remove_option('Aliases', alias)
+        click.echo(click.style('Removed Alias', fg='red'))
     else:
         config.set('Aliases', alias, ' '.join(list(addr)))
     with open('email_cli.cfg', 'w') as f:
         config.write(f)
+    click.echo(click.style('Set Alias', fg='green'))
 
 
 @email.command('config')
