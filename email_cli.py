@@ -3,14 +3,20 @@ import configparser
 import smtplib
 import click
 from email.message import EmailMessage
+import subprocess
+## TODO: smto
 
 config = configparser.ConfigParser()
-config.read('email_cli.cfg')
+config.read('.emailrc')
 aliases = config['Aliases']
 settings = config['Settings']
 
+_debug = settings.getboolean('debug', 'False')
 server = settings.get('server', 'smtp.gmail.com')
 port = settings.getint('port', 465)
+if _debug:
+    server = 'localhost'
+    port = 4000
 address_at = settings.get('address_at', 'EMAIL_ADDRESS')
 password_at = settings.get('password_at', 'EMAIL_PASSWORD')
 
@@ -21,12 +27,13 @@ def email():
 @email.command()
 @click.argument('to', nargs=-1)
 @click.option('-u', '--user', default=os.environ.get(address_at))
-@click.option('-T', 't', is_flag=True)
+@click.option('-T', 't', is_flag=True, help='Asks for text in a prompt')
 @click.option('-t','--text', required=False)
-@click.option('-F', 'f', is_flag=True)
+@click.option('-F', 'f', is_flag=True, help='Asks for attachments in a prompt')
 @click.option('-f', '--file', required=False, multiple=True)
 @click.option('-s','--subject', default='')
 def send(to, user, t, text, f,  file, subject):
+    """Sends a mail"""
     to = resolve(list(to))
     user = aliases.get(user, user)
 
@@ -51,19 +58,24 @@ def send(to, user, t, text, f,  file, subject):
             with click.open_file(file,'rb') as file:
                 msg.add_attachment(file.read(), maintype='application', subtype='octet-stream', filename=file.name)
 
-    with smtplib.SMTP_SSL(server, port) as smtp:
-        try:
-            smtp.login(user, EMAIL_PASSWORD)
-        except smtplib.SMTPAuthenticationError:
-            click.echo(click.style('Authentication Error', fg='red'))
-            exit()
+    if _debug:
+        with smtplib.SMTP(server, port) as smtp:
+                smtp.send_message(msg)
+                click.echo(click.style('Sent email',fg='green'))
+    else:
+        with smtplib.SMTP_SSL(server, port) as smtp:
+            try:
+                smtp.login(user, EMAIL_PASSWORD)
+            except smtplib.SMTPAuthenticationError:
+                click.echo(click.style('Authentication Error', fg='red'))
+                exit()
 
-        try:
-            smtp.send_message(msg)
-        except smtplib.SMTPRecipientsRefused:
-            click.echo(click.style('Invalid Email Address',fg='red'))
-        else:
-            click.echo(click.style('Sent email',fg='green'))
+            try:
+                smtp.send_message(msg)
+            except smtplib.SMTPRecipientsRefused:
+                click.echo(click.style('Invalid Email Address',fg='red'))
+            else:
+                click.echo(click.style('Sent email',fg='green'))
 
 
 @email.command()
@@ -77,7 +89,7 @@ def alias(alias, addr, remove):
         click.echo(click.style('Removed Alias', fg='red'))
     else:
         config.set('Aliases', alias, ' '.join(list(addr)))
-    with open('email_cli.cfg', 'w') as f:
+    with open('.emailrc', 'w') as f:
         config.write(f)
     click.echo(click.style('Set Alias', fg='green'))
 
@@ -87,9 +99,25 @@ def alias(alias, addr, remove):
 @click.argument('value', nargs=-1)
 def config_(setting, value):
     config.set('Settings', setting, ' '.join(value))
-    with open('email_cli.cfg', 'w') as f:
+    with open('.emailrc', 'w') as f:
         config.write(f)
 
+@email.command()
+@click.option('-d', is_flag=True, help='turn off the debugserver')
+def debug(d):
+    """Sets up a Debugging server"""
+    if d:
+        pid = bytes.decode(subprocess.run(['lsof', '-t', '-i:4000'], capture_output=True).stdout)
+        pid = pid.strip()
+        subprocess.run(['kill', pid])
+        config.set('Settings', 'debug', 'False')
+        with open('.emailrc', 'w') as f:
+            config.write(f)
+    else:
+        subprocess.Popen(['python', '-m', 'smtpd', '-c', 'DebuggingServer', '-n', 'localhost:4000'])
+        config.set('Settings', 'debug', 'True')
+        with open('.emailrc', 'w') as f:
+            config.write(f)
 
 def resolve(als):
     res = []
