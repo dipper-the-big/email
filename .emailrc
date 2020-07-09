@@ -1,8 +1,9 @@
 [Aliases]
 
 [Settings]
-debug = True
+debug = False
 address_at = EMAIL_ADDRESS
 password_at = EMAIL_PASSWORD
 server = smtp.gmail.com
 port = 465
+
