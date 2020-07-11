@@ -79,19 +79,23 @@ def send(to, user, t, text, f,  file, subject):
 
 
 @email.command()
-@click.argument('alias')
+@click.argument('alias', required=False)
 @click.argument('addr', nargs=-1)
 @click.option('-r', '--remove', is_flag=True, help='remove alias')
-def alias(alias, addr, remove):
+@click.option('-a', '--all', is_flag=True, help='list all aliases')
+def alias(alias, addr, remove, all):
     """sets an alias to an address or a list of addresses"""
-    if remove:
+    if all:
+        for alias in aliases:
+            click.echo(f'{alias} : {aliases[alias]}')
+    elif remove:
         config.remove_option('Aliases', alias)
         click.echo(click.style('Removed Alias', fg='red'))
     else:
         config.set('Aliases', alias, ' '.join(list(addr)))
-    with open('.emailrc', 'w') as f:
-        config.write(f)
-    click.echo(click.style('Set Alias', fg='green'))
+        with open('.emailrc', 'w') as f:
+            config.write(f)
+        click.echo(click.style('Set Alias', fg='green'))
 
 
 @email.command('config')
