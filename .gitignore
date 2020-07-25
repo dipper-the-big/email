@@ -8,3 +8,4 @@ test.jpg
 .DS_Store
 *.cfg
 .emailrc
+.vscode/
