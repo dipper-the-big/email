@@ -4,7 +4,6 @@ import smtplib
 import click
 from email.message import EmailMessage
 import subprocess
-## TODO: smto
 
 config = configparser.ConfigParser()
 config.read('.emailrc')
@@ -28,17 +27,17 @@ def email():
 @click.argument('to', nargs=-1)
 @click.option('-u', '--user', default=os.environ.get(address_at))
 @click.option('-T', 't', is_flag=True, help='Asks for text in a prompt')
-@click.option('-t','--text', required=False)
+@click.option('-t', '--text', required=False)
 @click.option('-F', 'f', is_flag=True, help='Asks for attachments in a prompt')
 @click.option('-f', '--file', required=False, multiple=True)
-@click.option('-s','--subject', default='')
-def send(to, user, t, text, f,  file, subject):
+@click.option('-s', '--subject', default='')
+def send(to, user, t, text, f, file, subject):
     """Sends a mail"""
-    to = resolve(list(to))
+    to = resolve(to)
     user = aliases.get(user, user)
 
     if user != os.environ.get(address_at):
-        EMAIL_PASSWORD = click.prompt('Password',hide_input=True)
+        EMAIL_PASSWORD = click.prompt('Password', hide_input=True)
     else:
         EMAIL_PASSWORD = os.environ.get(password_at)
 
@@ -55,13 +54,13 @@ def send(to, user, t, text, f,  file, subject):
         msg.set_content(text)
     if file:
         for file in file:
-            with click.open_file(file,'rb') as file:
+            with click.open_file(file, 'rb') as file:
                 msg.add_attachment(file.read(), maintype='application', subtype='octet-stream', filename=file.name)
 
     if _debug:
         with smtplib.SMTP(server, port) as smtp:
                 smtp.send_message(msg)
-                click.echo(click.style('Sent email',fg='green'))
+                click.echo(click.style('Sent email', fg='green'))
     else:
         with smtplib.SMTP_SSL(server, port) as smtp:
             try:
@@ -73,9 +72,9 @@ def send(to, user, t, text, f,  file, subject):
             try:
                 smtp.send_message(msg)
             except smtplib.SMTPRecipientsRefused:
-                click.echo(click.style('Invalid Email Address',fg='red'))
+                click.echo(click.style('Invalid Email Address', fg='red'))
             else:
-                click.echo(click.style('Sent email',fg='green'))
+                click.echo(click.style('Sent email', fg='green'))
 
 
 @email.command()
@@ -124,12 +123,9 @@ def debug(d):
             config.write(f)
 
 def resolve(als):
-    res = []
     for al in als:
-        a = aliases.get(al, al)
-        if a.find(' ') == -1:
-            res.append(a)
+        a = aliases.get(al, al).split(' ')
+        if len(a) == 1:
+            yield a[0]
         else:
-            for a_ in resolve(a.split(' ')):
-                res.append(a_)
-    return res
+            yield from resolve(a)
