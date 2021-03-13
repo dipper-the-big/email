@@ -6,18 +6,31 @@ from email.message import EmailMessage
 import subprocess
 
 config = configparser.ConfigParser()
-config.read('.emailrc')
+configfile = os.getenv('HOME') + '/.emailrc'
+config.read(configfile)
 aliases = config['Aliases']
 settings = config['Settings']
 
+address_at = settings.get('address_at', 'EMAIL_ADDRESS')
+password_at = settings.get('password_at', 'EMAIL_PASSWORD')
+
+doms = { 'gmail.com': ('smtp.gmail.com',465),
+         'yahoo.com': ('smtp.mail.yahoo.com',465),
+         'outlook.com': ('smtp.office365.com',587)
+         }
+
+def defaults(address: str):
+    for dom, conf in doms.items():
+        if address.endswith(dom):
+            return conf
+
 _debug = settings.getboolean('debug', 'False')
-server = settings.get('server', 'smtp.gmail.com')
-port = settings.getint('port', 465)
+server = settings.get('server', defaults(os.environ.get(address_at))[0])
+port = settings.getint('port', defaults(os.environ.get(address_at))[1])
 if _debug:
     server = 'localhost'
     port = 4000
-address_at = settings.get('address_at', 'EMAIL_ADDRESS')
-password_at = settings.get('password_at', 'EMAIL_PASSWORD')
+
 
 @click.group()
 def email():
@@ -33,6 +46,10 @@ def email():
 @click.option('-s', '--subject', default='')
 def send(to, user, t, text, f, file, subject):
     """Sends a mail"""
+
+    if server is None or port is None:
+        click.echo(click.style("You must specify a server or port in your '.emailrc' or using 'email config' command", fg='red'))
+
     to = resolve(to)
     user = aliases.get(user, user)
 
@@ -50,6 +67,7 @@ def send(to, user, t, text, f, file, subject):
     msg['Subject'] = subject
     msg['FROM'] = user
     msg['TO'] = to
+
     if text:
         msg.set_content(text)
     if file:
@@ -92,7 +110,7 @@ def alias(alias, addr, remove, all):
         click.echo(click.style('Removed Alias', fg='red'))
     else:
         config.set('Aliases', alias, ' '.join(list(addr)))
-        with open('.emailrc', 'w') as f:
+        with open(configfile, 'w') as f:
             config.write(f)
         click.echo(click.style('Set Alias', fg='green'))
 
@@ -101,8 +119,9 @@ def alias(alias, addr, remove, all):
 @click.argument('setting')
 @click.argument('value', nargs=-1)
 def config_(setting, value):
+    """Set or Update the value of a setting in your '.emailrc' file"""
     config.set('Settings', setting, ' '.join(value))
-    with open('.emailrc', 'w') as f:
+    with open(configfile, 'w') as f:
         config.write(f)
 
 @email.command()
@@ -114,12 +133,12 @@ def debug(d):
         pid = pid.strip()
         subprocess.run(['kill', pid])
         config.set('Settings', 'debug', 'False')
-        with open('.emailrc', 'w') as f:
+        with open(configfile, 'w') as f:
             config.write(f)
     else:
         subprocess.Popen(['python', '-m', 'smtpd', '-c', 'DebuggingServer', '-n', 'localhost:4000'])
         config.set('Settings', 'debug', 'True')
-        with open('.emailrc', 'w') as f:
+        with open(configfile, 'w') as f:
             config.write(f)
 
 def resolve(als):
