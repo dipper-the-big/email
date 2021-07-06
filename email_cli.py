@@ -144,9 +144,13 @@ def debug(d):
             config.write(f)
 
 def resolve(als):
+    # TODO fix recursion error on alias:alias
     for al in als:
-        a = aliases.get(al, al).split(' ')
-        if len(a) == 1:
-            yield a[0]
+        if al not in aliases:
+            yield al
         else:
-            yield from resolve(a)
+            a = aliases[al].split(' ')
+            try:
+                yield from resolve(a)
+            except RecursionError:
+                click.echo(click.style('Recursion Error occured, probable cause: an alias points to itself', fg='red'))
