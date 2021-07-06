@@ -107,6 +107,8 @@ def alias(alias, addr, remove, all):
             click.echo(f'{alias} : {aliases[alias]}')
     elif remove:
         config.remove_option('Aliases', alias)
+        with open(configfile, 'w') as f:
+            config.write(f)
         click.echo(click.style('Removed Alias', fg='red'))
     else:
         config.set('Aliases', alias, ' '.join(list(addr)))
