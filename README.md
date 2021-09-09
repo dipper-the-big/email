@@ -61,11 +61,11 @@ port = 465
   ```
   * Though it can deduce the server and port for common domains you must explicitly specify it in the config if it is not among the following:
   
- | domain  | server              | port |
- |:-------:|:-------------------:|:----:|
- | gmail   | smtp.gmail.com      | 465  |
- | outlook | smtp.office365.com  | 587  |
- | yahoo   | smtp.mail.yahoo.com | 465  |
+    | domain  | server              | port |
+    |:-------:|:-------------------:|:----:|
+    | gmail   | smtp.gmail.com      | 465  |
+    | outlook | smtp.office365.com  | 587  |
+    | yahoo   | smtp.mail.yahoo.com | 465  |
 
   * `address_at` and `password_at`are the the environment variables where it looks for you email adress and password respecively. (EMAIL_ADDRESS and EMAIL_PASSWORD default values)
 
