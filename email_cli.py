@@ -24,7 +24,7 @@ def defaults(address: str):
         if address.endswith(dom):
             return conf
 
-_debug = settings.getboolean('debug', 'False')
+_debug = settings.getboolean('debug', False)
 server = settings.get('server', defaults(os.environ.get(address_at))[0])
 port = settings.getint('port', defaults(os.environ.get(address_at))[1])
 if _debug:

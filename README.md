@@ -10,6 +10,18 @@ pip install .
 ```
 
 # Usage
+
+  * Create a `.emailrc` in your home directory and add the following minimal config to it
+
+  ``` ini
+[Aliases]
+
+[Settings]
+
+  ```
+
+  * You may also add the environment variables `EMAIL_ADDRESS` and `EMAIL_PASSWORD` with the appropriate values for convenience.
+ 
   * Use the `--help` option on any command for info regarding it
 
 ```console
@@ -26,12 +38,46 @@ Commands:
   send    Sends a mail
   
 ```
+  * Example
+  
+``` console
+email send -t "Hello person with a made up email" madeupemail@gmail.com 
+```
 
 # Config
 
-  * Create a .emailrc in your home directory and add the necessary settings to them. Here is an example:
+  * Here's an example (defaults) configuration:
   
   ``` ini
+[Settings]
+debug = False
+address_at = EMAIL_ADDRESS
+password_at = EMAIL_PASSWORD
+server = smtp.gmail.com
+port = 465
+
+[Aliases]
+
+  ```
+  * Though it can deduce the server and port for common domains you must explicitly specify it in the config if it is not among the following:
+  
+ | domain  | server              | port |
+ |:-------:|:-------------------:|:----:|
+ | gmail   | smtp.gmail.com      | 465  |
+ | outlook | smtp.office365.com  | 587  |
+ | yahoo   | smtp.mail.yahoo.com | 465  |
+
+  * `address_at` and `password_at`are the the environment variables where it looks for you email adress and password respecively. (EMAIL_ADDRESS and EMAIL_PASSWORD default values)
+
+  * Note: You can also use the `email config` command (see help) to add these settings
+
+# Aliases
+
+  * Use the `email alias` command to add aliases.
+  
+  * You can add aliases of multiple aliases as well. Here's an example:
+
+``` ini
 [Settings]
 debug = False
 address_at = EMAIL_ADDRESS
@@ -44,15 +90,6 @@ me = me@gmail.com
 some_person = someperson@gmail.com
 another_person = anotherperson@gmail.com
 people = some_person another_person
-  ```
-  * In the above example `EMAIL_ADDRESS` and `EMAIL_PASSWORD` are supposed to be names of environment variables containing your email address and password or app password respecively.
-
-  * Use the appropriate server and port for your email. However for common domains like the following it deduces it automaically.
-  
- | domain  | server              | port |
- |:-------:|:-------------------:|:----:|
- | gmail   | smtp.gmail.com      | 465  |
- | outlook | smtp.office365.com  | 587  |
- | yahoo   | smtp.mail.yahoo.com | 465  |
-  
-  * Note: You can also use the `email config` command (see help) to add these settings
+parents = mom@gmail.com dad@gmail.com
+more_people = people parents newperson@gmail.com
+```
